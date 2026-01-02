@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riftbound Living Legend Dex</title>
+    <style>
+        :root {
+            /* Standard Magic/Pokemon card size is 2.5 x 3.5 inches */
+            --card-width: 2.5in;
+            --card-height: 3.5in;
+            
+            /* TIGHTER GAPS to fit 11-inch paper */
+            --gap-x: 0.15in; 
+            --gap-y: 0.05in; 
+            
+            --page-width: 8.5in;
+            --page-height: 11in;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2d3748; /* Dark background for screen viewing */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Controls Area */
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 8.5in;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #2c5282;
+        }
+
+        /* The Sheet of Paper */
+        .page {
+            width: var(--page-width);
+            height: var(--page-height);
+            background: white;
+            margin-bottom: 20px;
+            padding-top: 0.2in;
+            padding-bottom: 0.2in;
+            padding-left: 0.3in;
+            padding-right: 0.3in;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: repeat(3, var(--card-width));
+            grid-template-rows: repeat(3, var(--card-height));
+            column-gap: var(--gap-x);
+            row-gap: var(--gap-y);
+            justify-content: center;
+            align-content: center;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Card Container */
+        .card-placeholder {
+            border: 1px dashed #cbd5e0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end; /* Text at bottom */
+            text-align: center;
+            position: relative;
+            background: #f7fafc;
+            overflow: hidden;
+            width: var(--card-width);
+            height: var(--card-height);
+            padding-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        /* The Background Image */
+        .card-bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Grayscale and faded to look like a placeholder/ghost */
+            filter: grayscale(100%) opacity(0.35); 
+            z-index: 0;
+        }
+
+        /* The "MISSING" Watermark */
+        .card-placeholder:after {
+            content: "MISSING";
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 20px;
+            color: rgba(0, 0, 0, 0.2); /* Darker for contrast against image */
+            z-index: 1;
+            font-weight: 900;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+
+        /* Text Styling */
+        .champion-info {
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.85);
+            width: 90%;
+            padding: 4px 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .champion-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #1a202c;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .release-date {
+            font-size: 9px;
+            color: #4a5568;
+            font-style: italic;
+        }
+
+        .dex-number {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 9px;
+            font-weight: bold;
+            color: #718096;
+            z-index: 2;
+            background: rgba(255,255,255,0.8);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .icon-placeholder {
+            /* Only shown if image fails */
+            display: none; 
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #edf2f7;
+            margin-bottom: auto;
+            margin-top: auto;
+            z-index: 1;
+            align-items: center;
+            justify-content: center;
+            color: #cbd5e0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 9px;
+            color: #ccc;
+            font-family: monospace;
+        }
+
+        @media print {
+            body { background: none; display: block; }
+            .controls { display: none !important; }
+            .page { 
+                box-shadow: none; margin: 0; page-break-after: always; border: none; 
+                top: 0; left: 0;
+            }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h1>Riftbound Living Dex Project</h1>
+        <p>3x3 Binder Placeholders with "Ghost" Artwork</p>
+        <button onclick="tryPrint()">🖨️ Print / Save as PDF</button>
+        <p style="font-size: 0.8em; margin-top: 10px; color: #718096;">
+            If button fails: <strong>Ctrl + P</strong> / <strong>Cmd + P</strong>.<br>
+            Ensure "Background Graphics" is ON.
+        </p>
+    </div>
+
+    <div id="binder-container"></div>
+
+    <script>
+        function tryPrint() { window.print(); }
+
+        // Helper to format names for Data Dragon API
+        function getDragonName(name) {
+            // Special mappings for API inconsistencies
+            const map = {
+                "Wukong": "MonkeyKing",
+                "Nunu & Willump": "Nunu",
+                "Renata Glasc": "Renata",
+                "Bel'Veth": "Belveth",
+                "Cho'Gath": "Chogath",
+                "Kai'Sa": "Kaisa",
+                "Kha'Zix": "Khazix",
+                "Kog'Maw": "KogMaw",
+                "LeBlanc": "Leblanc",
+                "Vel'Koz": "Velkoz",
+                "Dr. Mundo": "DrMundo",
+                "Jarvan IV": "JarvanIV",
+                "Master Yi": "MasterYi",
+                "Lee Sin": "LeeSin",
+                "Miss Fortune": "MissFortune",
+                "Tahm Kench": "TahmKench",
+                "Twisted Fate": "TwistedFate",
+                "Xin Zhao": "XinZhao",
+                "Aurelion Sol": "AurelionSol",
+                "Rek'Sai": "RekSai",
+                "K'Sante": "KSante"
+            };
+            if (map[name]) return map[name];
+            // Default: Remove spaces and non-alphanumeric chars (like ')
+            return name.replace(/[^a-zA-Z0-9]/g, '');
+        }
+
+        const champions = [
+            // 2009 - The Alpha Group
+            { name: "Alistar", date: "2009-02-21" }, { name: "Annie", date: "2009-02-21" },
+            { name: "Ashe", date: "2009-02-21" }, { name: "Fiddlesticks", date: "2009-02-21" },
+            { name: "Jax", date: "2009-02-21" }, { name: "Kayle", date: "2009-02-21" },
+            { name: "Master Yi", date: "2009-02-21" }, { name: "Morgana", date: "2009-02-21" },
+            { name: "Nunu & Willump", date: "2009-02-21" }, { name: "Ryze", date: "2009-02-21" },
+            { name: "Sion", date: "2009-02-21" }, { name: "Sivir", date: "2009-02-21" },
+            { name: "Soraka", date: "2009-02-21" }, { name: "Teemo", date: "2009-02-21" },
+            { name: "Tristana", date: "2009-02-21" }, { name: "Twisted Fate", date: "2009-02-21" },
+            { name: "Warwick", date: "2009-02-21" },
+            // 2009 - Beta & Launch
+            { name: "Singed", date: "2009-04-18" }, { name: "Zilean", date: "2009-04-18" },
+            { name: "Evelynn", date: "2009-05-01" }, { name: "Tryndamere", date: "2009-05-01" },
+            { name: "Twitch", date: "2009-05-01" }, { name: "Karthus", date: "2009-06-12" },
+            { name: "Amumu", date: "2009-06-26" }, { name: "Cho'Gath", date: "2009-06-26" },
+            { name: "Anivia", date: "2009-07-10" }, { name: "Rammus", date: "2009-07-10" },
+            { name: "Veigar", date: "2009-07-24" }, { name: "Kassadin", date: "2009-08-07" },
+            { name: "Gangplank", date: "2009-08-19" }, { name: "Taric", date: "2009-08-19" },
+            { name: "Blitzcrank", date: "2009-09-02" }, { name: "Dr. Mundo", date: "2009-09-02" },
+            { name: "Janna", date: "2009-09-02" }, { name: "Malphite", date: "2009-09-02" },
+            { name: "Corki", date: "2009-09-19" }, { name: "Katarina", date: "2009-09-19" },
+            { name: "Nasus", date: "2009-10-01" }, { name: "Heimerdinger", date: "2009-10-10" },
+            { name: "Shaco", date: "2009-10-10" }, { name: "Udyr", date: "2009-12-02" },
+            { name: "Nidalee", date: "2009-12-17" },
+            // 2010
+            { name: "Poppy", date: "2010-01-13" }, { name: "Gragas", date: "2010-02-02" },
+            { name: "Pantheon", date: "2010-02-02" }, { name: "Mordekaiser", date: "2010-02-24" },
+            { name: "Ezreal", date: "2010-03-16" }, { name: "Shen", date: "2010-03-24" },
+            { name: "Kennen", date: "2010-04-08" }, { name: "Garen", date: "2010-04-27" },
+            { name: "Akali", date: "2010-05-11" }, { name: "Malzahar", date: "2010-06-01" },
+            { name: "Olaf", date: "2010-06-09" }, { name: "Kog'Maw", date: "2010-06-24" },
+            { name: "Xin Zhao", date: "2010-07-13" }, { name: "Vladimir", date: "2010-07-27" },
+            { name: "Galio", date: "2010-08-10" }, { name: "Urgot", date: "2010-08-24" },
+            { name: "Miss Fortune", date: "2010-09-08" }, { name: "Sona", date: "2010-09-21" },
+            { name: "Swain", date: "2010-10-05" }, { name: "Lux", date: "2010-10-19" },
+            { name: "LeBlanc", date: "2010-11-02" }, { name: "Irelia", date: "2010-11-16" },
+            { name: "Trundle", date: "2010-12-01" }, { name: "Cassiopeia", date: "2010-12-14" },
+            // 2011
+            { name: "Caitlyn", date: "2011-01-04" }, { name: "Renekton", date: "2011-01-18" },
+            { name: "Karma", date: "2011-02-01" }, { name: "Maokai", date: "2011-02-16" },
+            { name: "Jarvan IV", date: "2011-03-01" }, { name: "Nocturne", date: "2011-03-15" },
+            { name: "Lee Sin", date: "2011-04-01" }, { name: "Brand", date: "2011-04-12" },
+            { name: "Rumble", date: "2011-04-26" }, { name: "Vayne", date: "2011-05-10" },
+            { name: "Orianna", date: "2011-06-01" }, { name: "Yorick", date: "2011-06-22" },
+            { name: "Leona", date: "2011-07-13" }, { name: "Wukong", date: "2011-07-26" },
+            { name: "Skarner", date: "2011-08-09" }, { name: "Talon", date: "2011-08-24" },
+            { name: "Riven", date: "2011-09-14" }, { name: "Xerath", date: "2011-10-05" },
+            { name: "Graves", date: "2011-10-19" }, { name: "Shyvana", date: "2011-11-01" },
+            { name: "Fizz", date: "2011-11-15" }, { name: "Volibear", date: "2011-11-29" },
+            { name: "Ahri", date: "2011-12-14" }, { name: "Viktor", date: "2011-12-29" },
+            // 2012
+            { name: "Sejuani", date: "2012-01-17" }, { name: "Ziggs", date: "2012-02-01" },
+            { name: "Nautilus", date: "2012-02-14" }, { name: "Fiora", date: "2012-02-29" },
+            { name: "Lulu", date: "2012-03-20" }, { name: "Hecarim", date: "2012-04-18" },
+            { name: "Varus", date: "2012-05-08" }, { name: "Darius", date: "2012-05-23" },
+            { name: "Draven", date: "2012-06-06" }, { name: "Jayce", date: "2012-07-07" },
+            { name: "Zyra", date: "2012-07-24" }, { name: "Diana", date: "2012-08-07" },
+            { name: "Rengar", date: "2012-08-21" }, { name: "Syndra", date: "2012-09-13" },
+            { name: "Kha'Zix", date: "2012-09-27" }, { name: "Elise", date: "2012-10-26" },
+            { name: "Zed", date: "2012-11-13" }, { name: "Nami", date: "2012-12-07" },
+            { name: "Vi", date: "2012-12-19" },
+            // 2013
+            { name: "Thresh", date: "2013-01-23" }, { name: "Quinn", date: "2013-03-01" },
+            { name: "Zac", date: "2013-03-29" }, { name: "Lissandra", date: "2013-04-30" },
+            { name: "Aatrox", date: "2013-06-13" }, { name: "Lucian", date: "2013-08-22" },
+            { name: "Jinx", date: "2013-10-10" }, { name: "Yasuo", date: "2013-12-13" },
+            // 2014
+            { name: "Vel'Koz", date: "2014-02-27" }, { name: "Braum", date: "2014-05-12" },
+            { name: "Gnar", date: "2014-08-14" }, { name: "Azir", date: "2014-09-16" },
+            { name: "Kalista", date: "2014-11-20" }, { name: "Rek'Sai", date: "2014-12-11" },
+            // 2015
+            { name: "Bard", date: "2015-03-12" }, { name: "Ekko", date: "2015-05-29" },
+            { name: "Tahm Kench", date: "2015-07-09" }, { name: "Kindred", date: "2015-10-14" },
+            { name: "Illaoi", date: "2015-11-24" },
+            // 2016
+            { name: "Jhin", date: "2016-02-01" }, { name: "Aurelion Sol", date: "2016-03-24" },
+            { name: "Taliyah", date: "2016-05-18" }, { name: "Kled", date: "2016-08-10" },
+            { name: "Ivern", date: "2016-10-05" }, { name: "Camille", date: "2016-12-07" },
+            // 2017
+            { name: "Rakan", date: "2017-04-19" }, { name: "Xayah", date: "2017-04-19" },
+            { name: "Kayn", date: "2017-07-12" }, { name: "Ornn", date: "2017-08-23" },
+            { name: "Zoe", date: "2017-11-21" },
+            // 2018
+            { name: "Kai'Sa", date: "2018-03-07" }, { name: "Pyke", date: "2018-05-31" },
+            { name: "Neeko", date: "2018-12-05" },
+            // 2019
+            { name: "Sylas", date: "2019-01-25" }, { name: "Yuumi", date: "2019-05-14" },
+            { name: "Qiyana", date: "2019-06-28" }, { name: "Senna", date: "2019-11-10" },
+            { name: "Aphelios", date: "2019-12-11" },
+            // 2020
+            { name: "Sett", date: "2020-01-14" }, { name: "Lillia", date: "2020-07-22" },
+            { name: "Yone", date: "2020-08-06" }, { name: "Samira", date: "2020-09-21" },
+            { name: "Seraphine", date: "2020-10-29" }, { name: "Rell", date: "2020-12-10" },
+            // 2021
+            { name: "Viego", date: "2021-01-21" }, { name: "Gwen", date: "2021-04-15" },
+            { name: "Akshan", date: "2021-07-22" }, { name: "Vex", date: "2021-09-23" },
+            // 2022
+            { name: "Zeri", date: "2022-01-20" }, { name: "Renata Glasc", date: "2022-02-17" },
+            { name: "Bel'Veth", date: "2022-06-09" }, { name: "Nilah", date: "2022-07-13" },
+            { name: "K'Sante", date: "2022-11-02" },
+            // 2023
+            { name: "Milio", date: "2023-03-23" }, { name: "Naafiri", date: "2023-07-19" },
+            { name: "Briar", date: "2023-09-14" }, { name: "Hwei", date: "2023-12-05" },
+            // 2024
+            { name: "Smolder", date: "2024-01-31" }, { name: "Aurora", date: "2024-07-17" },
+            { name: "Ambessa", date: "2024-11-06" },
+            // 2025
+            { name: "Mel", date: "2025-01-23" }, { name: "Yunara", date: "2025-07-16" },
+            { name: "Zaahen", date: "2025-11-19" }
+        ];
+
+        const container = document.getElementById('binder-container');
+        const itemsPerPage = 9;
+
+        for (let i = 0; i < champions.length; i += itemsPerPage) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'page';
+            
+            const pageItems = champions.slice(i, i + itemsPerPage);
+            
+            pageItems.forEach((champ, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card-placeholder';
+                
+                const apiName = getDragonName(champ.name);
+                const imgUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${apiName}_0.jpg`;
+                
+                cardDiv.innerHTML = `
+                    <img src="${imgUrl}" class="card-bg-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="icon-placeholder">?</div>
+                    
+                    <div class="champion-info">
+                        <div class="champion-name">${champ.name}</div>
+                        <div class="release-date">Released: ${champ.date}</div>
+                    </div>
+                    
+                    <div class="dex-number">#${i + index + 1}</div>
+                `;
+                pageDiv.appendChild(cardDiv);
+            });
+
+            // Fill empty spots on the last page
+            while (pageDiv.children.length < 9) {
+                const emptyDiv = document.createElement('div');
+                pageDiv.appendChild(emptyDiv);
+            }
+
+            // Page Number
+            const pageNum = document.createElement('div');
+            pageNum.className = 'page-number';
+            pageNum.innerText = `Page ${Math.floor(i/itemsPerPage) + 1}`;
+            pageDiv.appendChild(pageNum);
+
+            container.appendChild(pageDiv);
+        }
+    </script>
+</body>
+</html>
